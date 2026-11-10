@@ -1,11 +1,11 @@
 {
-    "name": "survival_bag_shelter_manager",
-    "short_name": "survival_bag_shelter_manager",
+    "name": "생존노트 (Survival Note)",
+    "short_name": "생존노트",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0F172A",
+    "theme_color": "#0F172A",
+    "description": "재난 대비 72시간 생존가방 및 30일 비축 물품 스마트 관리기",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
