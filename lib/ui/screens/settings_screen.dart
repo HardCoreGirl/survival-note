@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/theme/tactical_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/survival_providers.dart';
@@ -721,6 +722,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 28),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final version = snapshot.data?.version ?? '1.0.0';
+              final buildNumber = snapshot.data?.buildNumber ?? '1';
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24.0),
+                  child: Text(
+                    'Survival Note v$version+$buildNumber',
+                    style: const TextStyle(
+                      color: TacticalTheme.slate500,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
