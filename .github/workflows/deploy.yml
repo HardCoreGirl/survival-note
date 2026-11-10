@@ -1,9 +1,7 @@
 name: Deploy Flutter Web to Cloudflare Pages
 
+# 자동 배포(push)를 끄고, GitHub Actions 화면에서 사용자가 원하는 브랜치를 골라 수동 실행할 때만 배포됩니다.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
