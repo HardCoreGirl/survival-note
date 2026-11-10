@@ -1,0 +1,94 @@
+{
+  "@@locale": "en",
+  "appTitle": "Survival & Shelter Manager",
+  "modeSurvivalBag": "72h Survival Bag",
+  "modeShelterInPlace": "30d Shelter-in-Place",
+  "inspectionTitle": "6-Month Periodic Inspection",
+  "inspectionSubtitle": "Check battery leakage, power bank charge & seasonal gear",
+  "inspectionDueInDays": "Next check in {days} days",
+  "@inspectionDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "inspectionOverdue": "Inspection Overdue!",
+  "completeInspection": "Complete Inspection",
+  "inspectionResetToast": "Inspection completed! Next check scheduled in 6 months.",
+  "monthlyDigestBanner": "{count} items expiring within 60 days. Tap to review.",
+  "@monthlyDigestBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthlyDigestTitle": "Monthly Rolling Stock Digest",
+  "monthlyDigestSubtitle": "Consume and replace these items before expiration to maintain readiness.",
+  "notificationMonthlyTitle": "[Survival Alert] Monthly Rolling Stock Check",
+  "notificationMonthlyBody": "[Survival Alert] {count} items need replacement this month. Consume them before expiration!",
+  "@notificationMonthlyBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationInspectionTitle": "[Survival Alert] 6-Month Gear Inspection Due",
+  "notificationInspectionBody": "Time to inspect battery leakage, power bank charge, and seasonal survival gear.",
+  "consumeAndRestock": "Consume & Restock (+{months}m)",
+  "@consumeAndRestock": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "restockedToast": "{name} restocked! Expiry extended by {months} months.",
+  "@restockedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "addItem": "Add Supply",
+  "quickPresets": "1-Tap Expiry Presets",
+  "itemNameLabel": "Item or Pouch/Batch Name",
+  "itemNameHint": "e.g., Snack Pouch #1, Bottled Water",
+  "categoryLabel": "Category",
+  "storageLocationLabel": "Storage Location (Optional)",
+  "storageLocationHint": "e.g., Top Pouch, Pantry Tier 2",
+  "expiryMonthLabel": "Expiry Year-Month (YYYY-MM)",
+  "shelfLifeMonthsLabel": "Default Shelf Life (Months)",
+  "saveItem": "Save to Inventory",
+  "emptyInventory": "No supplies registered in this mode yet.",
+  "allCategories": "All",
+  "presetRamyeon": "Instant Noodles (+6m)",
+  "presetWater": "Water (+12m)",
+  "presetFirstAid": "First Aid (+24m)",
+  "presetCanned": "Canned Goods (+36m)",
+  "presetFreezeDried": "Freeze-Dried Rice (+60m)",
+  "presetBatteries": "Alkaline Batteries (+36m)",
+  "catBagFoodWater": "Food & Water",
+  "catBagFirstAid": "First Aid & Hygiene",
+  "catBagWarmth": "Warmth & Protective Gear",
+  "catBagLightComm": "Light & Comm",
+  "catBagTools": "Tools & Safety",
+  "catShelterFoodWater": "Bulk Food & Water",
+  "catShelterEnergy": "Emergency Energy & Cooking",
+  "catShelterSanitation": "Sanitation & Waste",
+  "catShelterMedical": "Medical & Care",
+  "catShelterDefense": "Home Defense & Repair",
+  "selectYearMonth": "Select Expiry Year & Month",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "expiredBadge": "EXPIRED",
+  "d30Badge": "D-30 URGENT",
+  "d60Badge": "D-60 SOON",
+  "safeBadge": "READY"
+}

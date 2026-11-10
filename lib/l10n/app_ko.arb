@@ -1,0 +1,94 @@
+{
+  "@@locale": "ko",
+  "appTitle": "생존가방 & 피난처 비축 관리기",
+  "modeSurvivalBag": "72시간 생존가방",
+  "modeShelterInPlace": "30일 재택 고립 비축",
+  "inspectionTitle": "6개월 정기 점검",
+  "inspectionSubtitle": "건전지 누액, 보조배터리 방전, 계절 의류 교체 점검",
+  "inspectionDueInDays": "다음 점검까지 {days}일 남음",
+  "@inspectionDueInDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "inspectionOverdue": "정기 점검 기한 경과!",
+  "completeInspection": "점검 완료 (6개월 연장)",
+  "inspectionResetToast": "정기 점검 완료! 6개월 뒤 다시 알림을 보냅니다.",
+  "monthlyDigestBanner": "60일 내 교체 필요 품목 {count}건 (탭하여 확인)",
+  "@monthlyDigestBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "monthlyDigestTitle": "월간 롤링스톡(순환 비축) 리포트",
+  "monthlyDigestSubtitle": "유통기한 만료 전에 일상에서 소비하고 새 제품으로 보충하세요.",
+  "notificationMonthlyTitle": "[생존 알림] 월간 비축품 교체 점검",
+  "notificationMonthlyBody": "[생존 알림] 이번 달 교체가 필요한 품목이 {count}개 있습니다. 유통기한 전에 소비하세요!",
+  "@notificationMonthlyBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationInspectionTitle": "[생존 알림] 6개월 정기 장비 점검일",
+  "notificationInspectionBody": "건전지 누액, 보조배터리 충전 상태, 계절별 생존 장비를 점검할 시간입니다.",
+  "consumeAndRestock": "소비 후 재비축 (+{months}개월)",
+  "@consumeAndRestock": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "restockedToast": "{name} 재비축 완료! 유통기한이 {months}개월 연장되었습니다.",
+  "@restockedToast": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "addItem": "비축품 등록",
+  "quickPresets": "원탭 유통기한 프리셋",
+  "itemNameLabel": "품목명 또는 파우치/묶음 이름",
+  "itemNameHint": "예: 비상식량 파우치 1호, 생수 2L 묶음",
+  "categoryLabel": "카테고리",
+  "storageLocationLabel": "보관 위치 (선택)",
+  "storageLocationHint": "예: 가방 상단 포켓, 팬트리 2단",
+  "expiryMonthLabel": "유통기한 연-월 (YYYY-MM)",
+  "shelfLifeMonthsLabel": "기본 교체 주기 (개월)",
+  "saveItem": "비축 목록에 저장",
+  "emptyInventory": "이 모드에 등록된 비축품이 없습니다.",
+  "allCategories": "전체",
+  "presetRamyeon": "라면 (+6개월)",
+  "presetWater": "생수 (+12개월)",
+  "presetFirstAid": "구급약 (+24개월)",
+  "presetCanned": "통조림 (+36개월)",
+  "presetFreezeDried": "동결건조밥 (+60개월)",
+  "presetBatteries": "알카라인 건전지 (+36개월)",
+  "catBagFoodWater": "식량 & 식수",
+  "catBagFirstAid": "구급 & 위생",
+  "catBagWarmth": "보온 & 보호장구",
+  "catBagLightComm": "조명 & 통신",
+  "catBagTools": "도구 & 안전",
+  "catShelterFoodWater": "대용량 식량 & 식수",
+  "catShelterEnergy": "비상 에너지 & 취사",
+  "catShelterSanitation": "위생 & 오물 처리",
+  "catShelterMedical": "상비약 & 돌봄",
+  "catShelterDefense": "가택 방어 & 보수",
+  "selectYearMonth": "유통기한 연/월 선택",
+  "cancel": "취소",
+  "confirm": "확인",
+  "expiredBadge": "만료됨",
+  "d30Badge": "D-30 임박",
+  "d60Badge": "D-60 주의",
+  "safeBadge": "양호"
+}
