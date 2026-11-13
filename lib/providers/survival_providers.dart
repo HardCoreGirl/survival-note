@@ -614,7 +614,7 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
         await _survivalService.updateSettings(
           token: token,
           householdCount: localHousehold,
-          lastInspectedAt: localInspection.lastInspectionDate,
+          lastInspectedAt: localInspection.lastInspectedAt,
           inspectionCycleMonths: localInspection.cycleMonths,
         ).catchError((e) {
           debugPrint('Background push settings error: $e');
@@ -731,7 +731,6 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
           })
           .catchError((e) {
             debugPrint('Background create item error: $e');
-            return item;
           });
     }
   }
@@ -974,14 +973,8 @@ class InspectionNotifier extends StateNotifier<InspectionCheck> {
   }
 
   void updateFromRemote(DateTime lastInspectedAt, int cycleMonths) {
-    final nextDate = DateTime(
-      lastInspectedAt.year,
-      lastInspectedAt.month + cycleMonths,
-      lastInspectedAt.day,
-    );
     final updated = InspectionCheck(
-      lastInspectionDate: lastInspectedAt,
-      nextInspectionDate: nextDate,
+      lastInspectedAt: lastInspectedAt,
       cycleMonths: cycleMonths,
     );
     _repository.saveInspectionCheck(updated);
