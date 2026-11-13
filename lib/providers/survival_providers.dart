@@ -356,11 +356,40 @@ class HouseholdCountNotifier extends StateNotifier<int> {
     state = clamped;
     await _repository.saveHouseholdCount(clamped, markConfigured: true);
     _ref.read(householdConfiguredProvider.notifier).state = true;
+
+    final token = _repository.getAuthToken();
+    if (token != null && token.isNotEmpty) {
+      _ref.read(gurrenSurvivalServiceProvider).updateSettings(
+        token: token,
+        householdCount: clamped,
+      ).catchError((e) {
+        debugPrint('Failed to sync household count to server: $e');
+        return <String, dynamic>{};
+      });
+    }
+  }
+
+  void updateFromRemote(int count) {
+    final clamped = count.clamp(1, 20);
+    state = clamped;
+    _repository.saveHouseholdCount(clamped, markConfigured: true);
+    _ref.read(householdConfiguredProvider.notifier).state = true;
   }
 
   Future<void> confirmCurrentCount() async {
     await _repository.saveHouseholdCount(state, markConfigured: true);
     _ref.read(householdConfiguredProvider.notifier).state = true;
+
+    final token = _repository.getAuthToken();
+    if (token != null && token.isNotEmpty) {
+      _ref.read(gurrenSurvivalServiceProvider).updateSettings(
+        token: token,
+        householdCount: state,
+      ).catchError((e) {
+        debugPrint('Failed to sync household count to server: $e');
+        return <String, dynamic>{};
+      });
+    }
   }
 
   Future<void> increment() => setCount(state + 1);
@@ -530,20 +559,99 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
     }
   }
 
-  /// Synchronizes local items with Gurren API server
+  /// Synchronizes local items and settings with Gurren API server
   Future<void> syncWithServer(String token) async {
     try {
       var serverItems = await _survivalService.fetchUserItems(token: token);
+
       if (serverItems.isEmpty) {
-        // First-time setup: initialize from server catalog
+        // 1. 서버에 아직 유저 아이템이 없는 경우: 공식 카탈로그 기반으로 서버 초기화
         serverItems = await _survivalService.initUserItems(token: token);
+
+        // 2. [핵심] 로그인 전 로컬에서 이미 체크/수정한 내용 및 커스텀 아이템을 서버로 일괄 Push
+        final localItems = _repository.getAllItems();
+        for (final local in localItems) {
+          if (local.id.startsWith('chk-')) {
+            // 카탈로그 기본 물품: 체크했거나 수량/유통기한/위치/메모를 바꿨으면 서버로 업데이트
+            if (local.isOwned || local.qtyPerPerson != 1 || local.memo != null || local.storageLocation != null) {
+              await _survivalService.updateUserItem(
+                token: token,
+                itemId: local.id,
+                isOwned: local.isOwned,
+                quantity: local.qtyPerPerson,
+                expiryDate: local.hasExpiry ? local.expiryMonth : null,
+                storageLocation: local.storageLocation,
+                memo: local.memo,
+              ).catchError((e) {
+                debugPrint('Background push local item error: $e');
+                return local;
+              });
+            }
+          } else {
+            // 사용자가 직접 추가한 커스텀 품목: 서버에 새로 등록
+            await _survivalService.createCustomItem(
+              token: token,
+              mode: local.mode == SurvivalMode.shelterInPlace ? 'shelter' : 'bag',
+              category: local.category,
+              name: local.name,
+              quantity: local.qtyPerPerson,
+              unit: local.unitKo,
+              importance: local.importance,
+              hasExpiry: local.hasExpiry,
+              expiryDate: local.hasExpiry ? local.expiryMonth : null,
+              storageLocation: local.storageLocation,
+              memo: local.memo,
+            ).catchError((e) {
+              debugPrint('Background push custom item error: $e');
+              return local;
+            });
+          }
+        }
+
+        // 3. 로컬의 가족 인원수 및 점검일 설정도 서버로 Push
+        final localHousehold = _repository.getHouseholdCount();
+        final localInspection = _repository.getInspectionCheck();
+        await _survivalService.updateSettings(
+          token: token,
+          householdCount: localHousehold,
+          lastInspectedAt: localInspection.lastInspectionDate,
+          inspectionCycleMonths: localInspection.cycleMonths,
+        ).catchError((e) {
+          debugPrint('Background push settings error: $e');
+          return <String, dynamic>{};
+        });
+
+        // Push 완료 후 최신 서버 상태 다시 로드
+        serverItems = await _survivalService.fetchUserItems(token: token);
+      } else {
+        // 4. 서버에 이미 데이터가 있는 경우 (다른 브라우저 등에서 로그인한 경우):
+        // 서버의 설정(인원수, 점검일)을 로컬에 다운로드하여 적용
+        try {
+          final settings = await _survivalService.fetchSettings(token: token);
+          if (settings['household_count'] is int) {
+            _ref.read(householdCountProvider.notifier).updateFromRemote(settings['household_count'] as int);
+          }
+          if (settings['last_inspected_at'] is String && (settings['last_inspected_at'] as String).isNotEmpty) {
+            final parsedDate = DateTime.tryParse(settings['last_inspected_at'] as String);
+            final cycle = settings['inspection_cycle_months'] as int? ?? 6;
+            if (parsedDate != null) {
+              _ref.read(inspectionProvider.notifier).updateFromRemote(parsedDate, cycle);
+            }
+          }
+        } catch (e) {
+          debugPrint('Failed to fetch settings from server: $e');
+        }
       }
+
+      // 5. 서버에 없는 로컬 품목 삭제 (삭제 동기화)
       final serverCatalogIds = serverItems.map((e) => e.catalogItemId ?? e.id).toSet();
       for (final item in List<Item>.from(state)) {
-        if (item.id.startsWith('chk-') && !serverCatalogIds.contains(item.id)) {
+        if (!serverCatalogIds.contains(item.catalogItemId ?? item.id)) {
           await _repository.deleteItem(item.id);
         }
       }
+
+      // 6. 서버의 최신 물품 상태(체크 여부, 수량, 유통기한, 보관장소, 메모 등)를 로컬에 완전 반영
       for (final sItem in serverItems) {
         final localIndex = state.indexWhere((e) => e.id == sItem.id || e.catalogItemId == sItem.id);
         Item toSave = sItem;
@@ -551,13 +659,20 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
           final local = state[localIndex];
           toSave = local.copyWith(
             catalogItemId: sItem.catalogItemId ?? local.catalogItemId,
-            affiliateUrlKr: sItem.affiliateUrlKr,
-            affiliateUrlEn: sItem.affiliateUrlEn,
-            affiliateImageUrl: sItem.affiliateImageUrl,
+            affiliateUrlKr: sItem.affiliateUrlKr ?? local.affiliateUrlKr,
+            affiliateUrlEn: sItem.affiliateUrlEn ?? local.affiliateUrlEn,
+            affiliateImageUrl: sItem.affiliateImageUrl ?? local.affiliateImageUrl,
             nameKo: sItem.nameKo,
             name: sItem.name,
             category: sItem.category,
             isOwned: sItem.isOwned,
+            qtyPerPerson: sItem.qtyPerPerson,
+            expiryMonth: sItem.hasExpiry ? sItem.expiryMonth : local.expiryMonth,
+            hasExpiry: sItem.hasExpiry,
+            storageLocation: sItem.storageLocation,
+            memo: sItem.memo,
+            importance: sItem.importance,
+            displayOrder: sItem.displayOrder,
             unitKo: sItem.unitKo != '?' ? sItem.unitKo : local.unitKo,
             unitEn: sItem.unitEn != '?' ? sItem.unitEn : local.unitEn,
           );
@@ -607,6 +722,13 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
             storageLocation: item.storageLocation,
             memo: item.memo,
           )
+          .then((createdServerItem) async {
+            if (createdServerItem.id != item.id) {
+              await _repository.deleteItem(item.id);
+              await _repository.saveItem(createdServerItem);
+              state = _repository.getAllItems();
+            }
+          })
           .catchError((e) {
             debugPrint('Background create item error: $e');
             return item;
@@ -630,6 +752,7 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
             expiryDate: updated.hasExpiry ? updated.expiryMonth : null,
             storageLocation: updated.storageLocation,
             memo: updated.memo,
+            customName: updated.id.startsWith('chk-') ? null : updated.name,
           )
           .catchError((e) {
             debugPrint('Background update item error: $e');
@@ -666,7 +789,10 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
             token: token,
             itemId: itemId,
             isOwned: updated.isOwned,
-            expiryDate: updated.expiryMonth,
+            quantity: updated.qtyPerPerson,
+            storageLocation: updated.storageLocation,
+            memo: updated.memo,
+            expiryDate: updated.hasExpiry ? updated.expiryMonth : null,
           )
           .catchError((e) {
             debugPrint('Background toggle item error: $e');
@@ -695,6 +821,9 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
             token: token,
             itemId: itemId,
             isOwned: true,
+            quantity: updated.qtyPerPerson,
+            storageLocation: updated.storageLocation,
+            memo: updated.memo,
             expiryDate: updated.expiryMonth,
           )
           .catchError((e) {
@@ -722,6 +851,9 @@ class InventoryNotifier extends StateNotifier<List<Item>> {
             token: token,
             itemId: itemId,
             isOwned: true,
+            quantity: updated.qtyPerPerson,
+            storageLocation: updated.storageLocation,
+            memo: updated.memo,
             expiryDate: updated.expiryMonth,
           )
           .catchError((e) {
@@ -811,20 +943,50 @@ class InspectionNotifier extends StateNotifier<InspectionCheck> {
   final StorageRepository _repository;
   final NotificationService _notifications;
   final bool Function() _isKoreanGetter;
+  final Ref _ref;
 
   InspectionNotifier(
     this._repository,
     this._notifications,
     this._isKoreanGetter,
+    this._ref,
   ) : super(_repository.getInspectionCheck()) {
     _syncNotification();
   }
 
   Future<void> completeInspection() async {
-    final updated = state.completeInspection(DateTime.now());
+    final now = DateTime.now();
+    final updated = state.completeInspection(now);
     await _repository.saveInspectionCheck(updated);
     state = updated;
     await _syncNotification();
+
+    final token = _repository.getAuthToken();
+    if (token != null && token.isNotEmpty) {
+      _ref.read(gurrenSurvivalServiceProvider).updateSettings(
+        token: token,
+        lastInspectedAt: now,
+      ).catchError((e) {
+        debugPrint('Failed to sync inspection date to server: $e');
+        return <String, dynamic>{};
+      });
+    }
+  }
+
+  void updateFromRemote(DateTime lastInspectedAt, int cycleMonths) {
+    final nextDate = DateTime(
+      lastInspectedAt.year,
+      lastInspectedAt.month + cycleMonths,
+      lastInspectedAt.day,
+    );
+    final updated = InspectionCheck(
+      lastInspectionDate: lastInspectedAt,
+      nextInspectionDate: nextDate,
+      cycleMonths: cycleMonths,
+    );
+    _repository.saveInspectionCheck(updated);
+    state = updated;
+    _syncNotification();
   }
 
   Future<void> _syncNotification() async {
@@ -843,5 +1005,6 @@ final inspectionProvider =
     repo,
     notifications,
     () => ref.read(localeProvider).languageCode == 'ko',
+    ref,
   );
 });
